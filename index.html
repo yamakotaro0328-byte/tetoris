@@ -1,0 +1,294 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width,initial-scale=1,user-scalable=no,viewport-fit=cover">
+    <title>NEON ULTIMATE</title>
+    <style>
+        :root { --p: #00f2ff; --d: #ff0070; --bg: #050510; --a: #7000ff; --g: #f1c40e; }
+        body { background: var(--bg); color: #fff; font-family: sans-serif; margin: 0; padding: 0; display: flex; flex-direction: column; align-items: center; overflow: hidden; touch-action: none; overscroll-behavior: none; position: fixed; inset: 0; width: 100vw; height: 100vh; }
+        #container { width: 100%; display: flex; flex-direction: column; align-items: center; padding: 20px 0; min-height: 100vh; }
+        #s { font-size: 1.1em; font-weight: bold; color: var(--p); text-shadow: 0 0 10px var(--p); margin-bottom: 10px; }
+        #g { display: flex; gap: 10px; padding: 10px; background: #000; border-radius: 15px; border: 2px solid var(--a); box-shadow: 0 0 20px rgba(112,0,255,0.4); position: relative; }
+        canvas { border: 1px solid #333; background: #000; border-radius: 5px; width: 200px; height: 334px; }
+        .side { display: flex; flex-direction: column; width: 80px; gap: 10px; }
+        .box { background: #111; border: 1px solid #333; border-radius: 8px; padding: 5px; text-align: center; }
+        .label { font-size: 0.6em; color: var(--p); margin-bottom: 4px; }
+        #bot { width: 44px; height: 44px; background: #000; border: 2px solid #444; border-radius: 8px; margin: 0 auto; position: relative; transition: 0.4s; }
+        #bot::before, #bot::after { content: ''; width: 6px; height: 6px; background: var(--p); position: absolute; top: 12px; border-radius: 50%; box-shadow: 0 0 8px var(--p); }
+        #bot::before { left: 8px; } #bot::after { right: 8px; }
+        #bot.phase2 { border-color: var(--p); border-radius: 50%; animation: float 2s infinite ease-in-out; }
+        #bot.phase3 { border-color: var(--d); width: 55px; height: 30px; border-radius: 4px; background: #200; }
+        #bot.phase3::before, #bot.phase3::after { background: var(--d); width: 10px; height: 2px; border-radius: 0; top: 14px; box-shadow: 0 0 10px var(--d); }
+        @keyframes float { 0%, 100% { transform: translateY(-3px); } 50% { transform: translateY(3px); } }
+        #st-bar { width: 100%; height: 4px; background: #222; margin-top: 5px; border-radius: 2px; overflow: hidden; }
+        #st-fill { width: 0%; height: 100%; background: var(--d); transition: 0.3s; }
+        
+        .ctrl-area { display: flex; justify-content: space-between; align-items: flex-end; width: 95%; max-width: 420px; margin-top: 15px; padding-bottom: 30px; }
+        .move-side { display: grid; grid-template-columns: repeat(3, 55px); gap: 8px; }
+        .action-side { display: flex; gap: 8px; }
+        
+        .btn { background: #000; color: #fff; border: 2px solid var(--a); border-radius: 12px; font-weight: bold; font-size: 0.85em; -webkit-user-select: none; touch-action: manipulation; display: flex; align-items: center; justify-content: center; height: 60px; }
+        .btn:active { background: var(--a); }
+        .wide-btn { width: 75px; height: 80px; border-color: var(--p); color: var(--p); }
+        .move-btn { width: 55px; }
+        
+        #msg { position: absolute; top: 30%; width: 100%; text-align: center; font-weight: bold; font-size: 1.5em; pointer-events: none; z-index: 100; text-shadow: 0 0 10px #000; }
+        #m { position: fixed; inset: 0; background: rgba(0,0,0,0.95); display: none; flex-direction: column; align-items: center; justify-content: center; z-index: 500; overflow-y: auto; padding: 20px 0; }
+        .m-btn { width: 260px; margin: 6px 0; padding: 12px; background: #000; color: #fff; border: 1px solid var(--p); border-radius: 8px; display: flex; justify-content: space-between; font-weight: bold; font-size: 0.9em; }
+        #home, #ov { position: fixed; inset: 0; background: var(--bg); display: flex; flex-direction: column; align-items: center; justify-content: center; z-index: 600; }
+        .start-btn { padding: 15px 50px; background: transparent; color: var(--p); border: 2px solid var(--p); border-radius: 8px; font-size: 1.5em; font-weight: bold; box-shadow: 0 0 15px var(--p); cursor: pointer; }
+    </style>
+</head>
+<body>
+    <div id="container">
+        <div id="home">
+            <h1 style="color:var(--p); text-shadow:0 0 20px var(--p);">ネオン・アルティメット</h1>
+            <button class="start-btn" onclick="startG()">スタート</button>
+            <button onclick="inputCode()" style="background:none; border:none; color:var(--a); margin-top:20px; text-decoration:underline; font-weight:bold;">セーブコードを入力</button>
+        </div>
+        <div id="s">スコア 0 | ハイスコア <span id="hi">0</span> | レベル 1</div>
+        <div id="g">
+            <div id="msg"></div>
+            <canvas id="t" width="240" height="400"></canvas>
+            <div class="side">
+                <div class="box">
+                    <div class="label">ホールド</div>
+                    <canvas id="h" width="60" height="60" style="width:50px; height:50px;"></canvas>
+                </div>
+                <div class="box">
+                    <div class="label">ネクスト</div>
+                    <canvas id="n" width="60" height="60" style="width:50px; height:50px;"></canvas>
+                </div>
+                <div class="box">
+                    <div id="bn" class="label">俯瞰視点</div>
+                    <div id="bot"></div>
+                    <div id="st-bar"><div id="st-fill"></div></div>
+                </div>
+                <button onclick="tM(1)" style="background:var(--p); color:#000; border:none; padding:12px 0; border-radius:8px; width:100%; font-weight:bold; font-size:0.8em; touch-action:manipulation; margin-top:5px;">ショップ</button>
+            </div>
+        </div>
+        
+        <div class="ctrl-area">
+            <div class="move-side">
+                <button class="btn move-btn" id="lB">左</button>
+                <button class="btn move-btn" style="border-color:var(--a); color:#fff;" onclick="rotate()">回転</button>
+                <button class="btn move-btn" id="rB">右</button>
+            </div>
+            <div class="action-side">
+                <button class="btn wide-btn" style="border-color:var(--p); color:var(--p);" id="dB">落下</button>
+                <button class="btn wide-btn" onpointerdown="event.preventDefault(); hld()">ホールド</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="m">
+        <h2 style="color:var(--p);">サイバーショップ</h2>
+        <button class="m-btn" onclick="it('3LINE')"><span>下から3行消去</span><span>300</span></button>
+        <button class="m-btn" onclick="it('HALF')"><span>盤面半分消去</span><span>800</span></button>
+        <button class="m-btn" onclick="it('SLOW')"><span>スピードダウン</span><span>500</span></button>
+        <button class="m-btn" onclick="it('GACHA')" style="border-color:var(--g); color:var(--g);"><span>運試しガチャ</span><span>600</span></button>
+        <button class="m-btn" onclick="it('RESET')" style="border-color:var(--d); color:var(--d);"><span>ストレス全消去</span><span>1500</span></button>
+        <button onclick="exportCode()" style="width:260px; margin:10px 0; background:none; border:1px solid var(--a); color:var(--a); padding:10px; border-radius:8px; font-weight:bold;">セーブコード発行</button>
+        <button onclick="tM(0)" style="width:260px; margin-top:5px; background:var(--d); border:none; color:#fff; padding:15px; border-radius:8px; font-weight:bold; touch-action:manipulation;">閉じる</button>
+    </div>
+    <div id="ov" style="display:none">
+        <h1 style="color:var(--d);">ゲーム終了</h1>
+        <div id="fs" style="font-size: 1.5em; margin-bottom:20px;"></div>
+        <button class="start-btn" style="border-color:var(--d); color:var(--d);" onclick="goHome()">ホームへ</button>
+    </div>
+
+<script>
+const c=document.getElementById('t'),x=c.getContext('2d'),nc=document.getElementById('n'),nx=nc.getContext('2d'),hc=document.getElementById('h'),hx=hc.getContext('2d'),se=document.getElementById('s'),me=document.getElementById('m'),bo=document.getElementById('bot'),bn=document.getElementById('bn'),ms=document.getElementById('msg'),sf=document.getElementById('st-fill'),ge=document.getElementById('g');
+x.scale(20,20);nx.scale(15,15);hx.scale(15,15);
+const cl=[null,'#ff0070','#00f2ff','#00ff80','#b000ff','#ff8000','#ffff00','#0080ff','#555555','#f1c40e','#70a1ff','#ff00ff'];
+let a=[],p={},is=0,dt=0,lt=0,isD=0,ps=1,lv=1,rev=0,mI=null,stress=0,stones=[],lastMilestone=0,phase=1,slowTime=0;
+let hP=null, canH=1, lastRot=0, hiScore=0, actx=null, rafId=null;
+
+try { hiScore = localStorage.getItem('nt_hs') || 0; } catch (e) { hiScore = 0; }
+document.getElementById('hi').innerText = hiScore;
+
+// --- セーブコード機能 ---
+function exportCode() {
+    const state = { a, s: p.s, lv, hP, stress, phase };
+    const code = btoa(JSON.stringify(state)); // Base64エンコード
+    prompt("このコードをコピーして保存してください:", code);
+}
+function inputCode() {
+    const code = prompt("セーブコードを入力してください:");
+    if (!code) return;
+    try {
+        const decoded = JSON.parse(atob(code));
+        a = decoded.a; p.s = decoded.s; lv = decoded.lv; hP = decoded.hP; stress = decoded.stress; phase = decoded.phase;
+        startG(true); // ロードモードで開始
+    } catch (e) { alert("無効なコードです"); }
+}
+
+const beep=(f,t,w='square')=>{if(!actx)return;try{let o=actx.createOscillator(),g=actx.createGain();o.type=w;o.frequency.value=f;o.connect(g);g.connect(actx.destination);o.start();g.gain.exponentialRampToValueAtTime(0.00001,actx.currentTime+t);o.stop(actx.currentTime+t);}catch(e){}};
+
+function startG(isLoad = false){
+    try { if(!actx) actx = new (window.AudioContext || window.webkitAudioContext)(); if(actx.state === 'suspended') actx.resume(); } catch (e) {}
+    
+    if(!isLoad) {
+        a=Array.from({length:20},()=>Array(12).fill(0));
+        p={pos:{x:4,y:0},m:null,nx:null,s:0};
+        lv=1; stress=0; phase=1; hP=null;
+    } else {
+        p.pos = {x:4,y:0}; p.m = null; p.nx = null;
+    }
+
+    is=0; ps=0; dt=0; rev=0; lastMilestone=0; slowTime=0; lt=performance.now(); stones=[]; canH=1;
+    document.getElementById('home').style.display='none';
+    document.getElementById('ov').style.display='none';
+    if(rafId) cancelAnimationFrame(rafId);
+    rs();
+    rafId = requestAnimationFrame(u); 
+    upS();
+}
+
+function goHome(){ is=0; ps=1; document.getElementById('ov').style.display='none'; document.getElementById('home').style.display='flex'; }
+function flash(t,col){ms.innerText=t; ms.style.color=col; setTimeout(()=>ms.innerText="",1500);}
+
+function upS() { 
+    lv=Math.floor(p.s/200)+1; 
+    if(p.s>hiScore){hiScore=p.s; try{localStorage.setItem('nt_hs',hiScore);}catch(e){}}
+    se.innerHTML=`スコア ${p.s} | ハイスコア <span id="hi">${hiScore}</span> | レベル ${lv}`;
+    sf.style.width = stress + '%';
+    if(lv < 5) { bo.className = ''; bn.innerText = "俯瞰視点"; phase=1; }
+    else if(lv < 10) { bo.className = 'phase2'; bn.innerText = "ドローン"; phase=2; }
+    else { bo.className = 'phase3'; bn.innerText = "指揮官"; phase=3; }
+}
+
+function it(type){
+    let cost = { '3LINE':300, 'HALF':800, 'SLOW':500, 'GACHA':600, 'RESET':1500 }[type];
+    if(p.s < cost) { beep(100,0.2,'sawtooth'); return; } p.s -= cost; beep(600,0.2,'square');
+    if(type==='3LINE'){ a.splice(17,3); while(a.length<20) a.unshift(Array(12).fill(0)); flash("修復完了", "#00f2ff"); }
+    if(type==='HALF'){ a.splice(10,10); while(a.length<20) a.unshift(Array(12).fill(0)); flash("半分削除", "#7000ff"); }
+    if(type==='SLOW'){ slowTime = Date.now() + 10000; flash("時間延長", "#00ff80"); }
+    if(type==='RESET'){ a=Array.from({length:20},()=>Array(12).fill(0)); stones=[]; flash("強制リセット", "#ff0070"); }
+    if(type==='GACHA'){
+        let r=Math.random();
+        if(r<0.3) { a=Array.from({length:20},()=>Array(12).fill(0)); stones=[]; flash("全消去！", "#00f2ff"); }
+        else if(r<0.6) { rev=Date.now()+7000; ge.classList.add('glitch'); flash("操作反転！", "#ff0070"); setTimeout(()=>ge.classList.remove('glitch'),7000); }
+        else { p.s += 2000; flash("大当たり！", "#f1c40e"); beep(900,1,'sine'); }
+    }
+    upS(); tM(0);
+}
+
+function cp(){
+    const s='TJLOSZI',m={I:[[0,1,0,0],[0,1,0,0],[0,1,0,0],[0,1,0,0]],L:[[0,2,0],[0,2,0],[0,2,2]],J:[[0,3,0],[0,3,0],[3,3,0]],O:[[4,4],[4,4]],Z:[[5,5,0],[0,5,5]],S:[[0,6,6],[6,6,0]],T:[[0,7,0],[7,7,7]]};
+    return {m:m[s[Math.random()*7|0]]};
+}
+function rs(){ p.m=p.nx?p.nx.m:cp().m; p.nx=cp(); p.pos={y:0,x:4}; canH=1; lastRot=0; if(co(a,p))is=1; }
+
+function co(f,o){
+    for(let y=0; y<o.m.length; y++){
+        for(let x_pos=0; x_pos<o.m[y].length; x_pos++){
+            if(o.m[y][x_pos] !== 0){
+                let targetY = y + o.pos.y;
+                let targetX = x_pos + o.pos.x;
+                if(targetY >= 20 || targetX < 0 || targetX >= 12 || (targetY >= 0 && f[targetY][targetX] !== 0)){
+                    return 1;
+                }
+            }
+        }
+    }
+    return 0;
+}
+
+function tM(v){ps=v;me.style.display=v?'flex':'none'}
+
+function hld(){
+    if(!canH || is || ps)return;
+    beep(300, 0.1);
+    if(hP){let t=hP; hP=p.m; p.m=t; p.pos={y:0,x:4};}
+    else{hP=p.m; rs();}
+    canH=0; lastRot=0; dr();
+}
+
+function dr(){
+    x.fillStyle='#000'; x.fillRect(0,0,12,20);
+    a.forEach((r,y)=>r.forEach((v,i)=>{if(v){x.fillStyle=cl[v];x.fillRect(i,y,.9,.9);}}));
+    stones.forEach(s=>{x.fillStyle='#555';x.fillRect(s.x,s.y,.9,.9)});
+    if(p.m){
+        let ghost = {pos:{x:p.pos.x, y:p.pos.y}, m:p.m};
+        while(!co(a, ghost)) { ghost.pos.y++; }
+        ghost.pos.y--;
+        x.strokeStyle = 'rgba(255,255,255,0.3)';
+        x.lineWidth = 0.05;
+        ghost.m.forEach((r,y)=>r.forEach((v,i)=>{ if(v){ x.strokeRect(i+ghost.pos.x+0.1, y+ghost.pos.y+0.1, 0.8, 0.8); } }));
+        p.m.forEach((r,y)=>r.forEach((v,i)=>{if(v){x.fillStyle=cl[v];x.fillRect(i+p.pos.x,y+p.pos.y,.9,.9);}}));
+    }
+    nx.fillStyle='#000'; nx.fillRect(0,0,4,4); hx.fillStyle='#000'; hx.fillRect(0,0,4,4);
+    if(p.nx)p.nx.m.forEach((r,y)=>r.forEach((v,i)=>{if(v){nx.fillStyle=cl[v];nx.fillRect(i,y,1,1)}}));
+    if(hP)hP.forEach((r,y)=>r.forEach((v,i)=>{if(v){hx.fillStyle=cl[v];hx.fillRect(i,y,1,1)}}));
+}
+
+function D(){
+    if(ps||is)return; p.pos.y++;
+    if(co(a,p)){
+        p.pos.y--; p.m.forEach((r,y)=>r.forEach((v,i)=>{if(v)a[y+p.pos.y][i+p.pos.x]=v}));
+        beep(150, 0.1, 'triangle');
+        let lines=0;
+        for(let y=19;y>0;y--)if(a[y].every(v=>v!==0)){a.splice(y,1);a.unshift(Array(12).fill(0));y++;lines++;}
+        if(lines){
+            p.s+=lines*100; stress+=lines*25; 
+            beep(600 + lines*200, 0.4, 'sine');
+            if(stress>=100){ let count = phase===1?5:phase===2?8:12; for(let i=0; i<count; i++){ stones.push({x:Math.random()*12|0, y:0}); } stress=0; flash("攻勢来襲！",'#ff0070'); }
+            upS();
+        }
+        rs();
+    }
+    dt=0;
+}
+
+function u(t=0){
+    if(is){document.getElementById('ov').style.display='flex';document.getElementById('fs').innerText=`最終スコア: ${p.s}`;return}
+    if(!ps){
+        dt+=t-lt;
+        let baseSpd = slowTime > Date.now() ? 1200 : Math.max(150, 800-lv*15);
+        let spd = isD ? 30 : baseSpd;
+        if(dt>spd) D();
+        let sProb = phase===3?0.06:0.02; 
+        stones.forEach((s,i)=>{if(Math.random()<sProb){s.y++;if(s.y>=20||a[s.y][s.x]!==0){if(s.y>0&&s.y<20)a[s.y-1][s.x]=8;stones.splice(i,1)}}});
+    }
+    lt=t; dr(); rafId = requestAnimationFrame(u);
+}
+const move=(d)=>{let dir=(Date.now()<rev)?-d:d;p.pos.x+=dir;if(co(a,p))p.pos.x-=dir; lastRot=0;};
+const sM=(d)=>{clearInterval(mI);move(d);mI=setInterval(()=>move(d),150);};
+const eM=()=>{clearInterval(mI);mI=null;};
+const sb=(id,d)=>{
+    const b=document.getElementById(id);
+    if(!b)return;
+    b.onpointerdown=(e)=>{e.preventDefault();sM(d)};
+    b.onpointerup=eM;b.onpointerleave=eM;b.onpointercancel=eM;
+};
+sb('lB',-1);sb('rB',1);
+document.getElementById('dB').onpointerdown=(e)=>{e.preventDefault();isD=1};
+document.getElementById('dB').onpointerup=()=>{isD=0};
+
+function rotate(){
+    let m=p.m,nm=m[0].map((_,i)=>m.map(r=>r[i]).reverse());
+    let oldM = p.m;
+    p.m=nm;
+    if(co(a,p)){
+        p.pos.x++;
+        if(co(a,p)){
+            p.pos.x-=2;
+            if(co(a,p)){
+                p.pos.x++; p.m=oldM; 
+                return;
+            }
+        }
+    }
+    lastRot=1; beep(400, 0.05);
+}
+
+window.onkeydown=(e)=>{
+    if(ps||is)return; const k=e.key;
+    if(k==='ArrowLeft')move(-1); if(k==='ArrowRight')move(1); if(k==='ArrowUp')rotate(); if(k==='ArrowDown')isD=1; if(k.toLowerCase()==='c'||k==='Shift')hld();
+};
+window.onkeyup=(e)=>{if(e.key==='ArrowDown')isD=0;};
+</script>
+</body>
+</html>
