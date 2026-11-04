@@ -140,7 +140,12 @@ function startG(isLoad = false){
 
     is=0; ps=0; dt=0; rev=0; lastMilestone=0; slowTime=0; lt=performance.now(); stones=[]; canH=1;
     document.getElementById('home').style.display='none';
-    document.getElementById('ov').style.display='none';
+    if(decoded && decoded.isGameOver){
+        const ov = document.createElement('div');
+        ov.id='ov'; ov.style.display='flex'; ov.innerHTML='<h2>ゲームオーバー</h2><p>最終スコア: '+p.s+'</p><button class="start-btn" onclick="startG(true)">再挑戦</button>';
+    } else {
+        document.getElementById('ov').style.display='none';
+    }
     if(rafId) cancelAnimationFrame(rafId);
     rs();
     rafId = requestAnimationFrame(u); 
