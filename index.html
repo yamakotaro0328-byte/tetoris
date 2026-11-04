@@ -105,8 +105,20 @@ const cl=[null,'#ff0070','#00f2ff','#00ff80','#b000ff','#ff8000','#ffff00','#008
 let a=[],p={},is=0,dt=0,lt=0,isD=0,ps=1,lv=1,rev=0,mI=null,stress=0,stones=[],lastMilestone=0,phase=1,slowTime=0;
 let hP=null, canH=1, lastRot=0, hiScore=0, actx=null, rafId=null;
 
-try { hiScore = localStorage.getItem('nt_hs') || 0; } catch (e) { hiScore = 0; }
-document.getElementById('hi').innerText = hiScore;
+} catch { try { hiScore = localStorage.getItem('nt_hs') || 0; } catch { hiScore = 0; } } ndocument.getElementById('hi').innerText = hiScore;
+
+// --- EXP & ローカルセーブシステム強化 ---
+let exp=0, maxExp=100, level2=1;
+class Saveable {
+    static save(name) {
+        try { localStorage.setItem(name, JSON.stringify(this)); } catch {}
+    }
+    static load(name, defaults) {
+        try { const d = JSON.parse(localStorage.getItem(name) || 'null'); return d ? Object.assign({}, defaults, d) : defaults; } catch { return defaults; }
+    }
+}
+Saveable.expert = { exp: 0, maxExp: 100 }; Saveable.expert.save('nt_exp');
+try { const e = Saveable.load('nt_exp', {}); if(e && e.exp >= 0) { expert = e; expValue=expert.exp; } catch { expert={exp:0,maxExp:100}; expValue=0; }}
 
 // --- セーブコード機能 ---
 function exportCode() {
