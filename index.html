@@ -309,7 +309,10 @@ function rotate(){
     lastRot=1; beep(400, 0.05);
 }
 
-window.onkeydown=(e)=>{
+// 初期化
+const initG=(l=1)=>{lv=l;p.s=0;hld();};
+// ゲームオーバー
+if('is') document.getElementById('ov').style.display='flex';
     if(ps||is)return; const k=e.key;
     if(k==='ArrowLeft')move(-1); if(k==='ArrowRight')move(1); if(k==='ArrowUp')rotate(); if(k==='ArrowDown')isD=1; if(k.toLowerCase()==='c'||k==='Shift')hld();
 };
