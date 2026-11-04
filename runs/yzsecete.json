@@ -1,0 +1,1 @@
+{"branch":"kot/mw1hwvnv-af1296","command":"curl -s \"https://www.youtube.com/results?search_query=t-spin+rule&tbm=dis\" 2>/dev/null | grep -o \"T スピン\\|T-Spin\\|Tetris Spin\" | head -3"}
