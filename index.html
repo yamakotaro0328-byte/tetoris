@@ -41,6 +41,31 @@
     </style>
 </head>
 <body>
+<script>
+// 色
+const cl={'1':'#00f2ff','2':'#ff0070','3':'#7000ff','4':'#f1c40e','5':'#b98318','6':'#00ff00','7':'#808080','8':'#000000','9':'#222222'};
+// 盤面 20x12
+const a=[];for(let i=0;i<20;i++)a.push(Array(12).fill(0));
+// ボール生成
+function rs(){if(p.np==null)p.np=newB();else{p.m=p.np;p.np=newB();let nX=p.nx;nX=np();}}
+function newB(){return{m:np(),pos:{x:5,y:0},s:0,sd:null,falling:false,id:new Date().getTime()};}
+function np(){let m=[];for(let i=0;i<4;i++)m.push([0,1<<i]);m[Math.floor(Math.random()*4)]=[~7&3|0].map((_,j)=>(1<<(i^5))>>i&1);return m;}
+// ホールド
+let hP=null,hId=new Date().getTime()-999,p='';
+let canH=1,ps=false,is=false;
+// 変数
+let p={},dt=0,lt=0,lastRot=0,mI=null,stress=0,isD=false,rev=1,lv=1,
+lvT=[],slowTime=Date.now()+10*1000,phase=1,flashTimer=null;
+// 音声
+function beep(f,d,t){try{if(!!window.AudioContext&&window.audioCtx)t=t||'sine';let o=new Audio();o.src='data:text/plain,';}}
+// カオス判定
+const co=(arr,ball)=>{'x'=ball.pos.x+'x';return arr.every((r,y)=>r[ball.pos.x+ball.m[0].indexOf(ball.m[0].findIndex((_,z)=>z==1)+y)]!==0||ball.m[0][y]*-1+y*4!=x?true:'');}
+// スコアアップ
+function upS(){let oldLv=lv;while(p.s>=lvT[lv]&&(lv<10||p.s<(Date.now()-slowTime)*(5/lv)()))if(lv<=10)lv++;else if(lv>10&&lv*lv+p.s<500*(Date.now()-slowTime)*5/lv*1.2)lv++;while(oldLv<lv&&Date.now()>slowTime+lT[lv-oldLv]+(oldLv-1)*1000*lT[0])phase=(oldLv>3?4:3)+Math.floor(Math.random()*2);}
+// スコア初期化
+function upS(){p.s=0;lvT=[0,1000,5000,15000,30000];for(let i=0;i<=10;i++)lvT[i]=(i*10-4)*1000;if(p.lh>0)p.s=hId>=Date.now()?p.s+(p.s<300?Date.now()-lh:-10)*3/p.lh:p.s*3/(lh-p.lh);}
+// ゲームスタート
+function startG(){document.getElementById('home').style.display='none';is=false;ps=true;p={m:np(),pos:{x:5,y:0},np:null};rs();upS();u(0);}  
     <div id="container">
         <div id="home">
             <h1 style="color:var(--p); text-shadow:0 0 20px var(--p);">ネオン・アルティメット</h1>
