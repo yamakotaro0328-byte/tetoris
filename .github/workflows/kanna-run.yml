@@ -1,0 +1,31 @@
+name: kanna-run
+on:
+  push:
+    branches: ['kanna-run']
+permissions:
+  contents: write
+jobs:
+  run:
+    if: startsWith(github.event.head_commit.message, 'kanna-run:')
+    runs-on: ubuntu-latest
+    timeout-minutes: 12
+    steps:
+      - uses: actions/checkout@v4
+      - name: run
+        env:
+          MSG: ${{ github.event.head_commit.message }}
+        run: |
+          ID="$(printf '%s' "${MSG#kanna-run:}" | head -n1 | tr -cd 'A-Za-z0-9_-')"
+          BRANCH="$(jq -r .branch "runs/$ID.json")"
+          CMD="$(jq -r .command "runs/$ID.json")"
+          git fetch -q origin "$BRANCH"
+          git worktree add -q ../work FETCH_HEAD
+          set +e
+          ( cd ../work && timeout 600 bash -c "$CMD" ) > /tmp/out.txt 2>&1
+          CODE=$?
+          { echo "exit=$CODE"; tail -n 200 /tmp/out.txt; } > "runs/$ID.out"
+          git config user.name Kanna
+          git config user.email kanna@users.noreply.github.com
+          git add "runs/$ID.out"
+          git commit -q -m "kanna-result:$ID"
+          git push -q
