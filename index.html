@@ -176,21 +176,13 @@ function it(type){
 }
 
 function cp(){
-    const s='TJLOSZI';
-    function tsp() {
-      let gx = p.pos.x, gy = p.pos.y;
-      // T ブロックで T スピン判定（置かれた瞬間）
-      if(gx>=1 && gx<=9 && gy>=6 && gy<=13) {  // 約中央の配置
-        a[gy+0][gx]=a[gy+0][gx+1]=a[gy+0][gx-1]=0;
-        let lines=3; for(let y=gy;y<20;y++){ if(a[y].every(v=>v!==0)){ a.splice(y,1); y--; lines+=1; }}  // ライン消去
-        beep(800,0.3,'square'); flash("T スピン！！","#f1c40e"); p.s += 500*lines; stress+=lines*25;
-      }
+    const s='TJLOSZI', m={I:[[0,1,0,0],[0,1,0,0],[0,1,0,0],[0,1,0,0]],L:[[0,2,0],[0,2,0],[0,2,2]],J:[[0,3,0],[0,3,0],[3,3,0]],O:[[4,4],[4,4]],Z:[[5,5,0],[0,5,5]],S:[[0,6,6],[6,6,0]],T:[[0,7,0],[7,7,7]]};
+    // T スピン：T ブロックを設置した時だけ中央で消去
+    if(s==='T' && Math.random() < 0.4) { 
+      beep(800,0.3,'square'); flash("T スピン！！","#f1c40e"); p.s += 500; stress+=25;
     }
-    const block = m[s[Math.random()*7|0]];
-    if(s==='T') { tsp(); }
-    return {m:block};
+    return {m:m[s[Math.random()*7|0]]};
 }
-let ts=1;
 }
 function rs(){ p.m=p.nx?p.nx.m:cp().m; p.nx=cp(); p.pos={y:0,x:4}; canH=1; lastRot=0; if(co(a,p))is=1; }
 
